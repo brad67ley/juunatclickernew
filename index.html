@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Juunat Clicker</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Arial", sans-serif;
+        background-color: #2c3e50;
+        color: #ecf0f1;
+        text-align: center;
+        user-select: none;
+        overflow: hidden;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      #rain-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 0;
+        overflow: hidden;
+      }
+      .raindrop {
+        position: absolute;
+        top: -70px;
+        width: 60px;
+        height: 60px;
+        background-image: url("https://file.garden/ZXP--j_dI1vYUjvY/juunat.PNG");
+        background-size: cover;
+        border-radius: 10px;
+        opacity: 0.7;
+        animation: fall linear forwards;
+      }
+      #game-container {
+        background-color: #34495e;
+        border-radius: 15px;
+        padding: 20px;
+        width: 80%;
+        max-width: 500px;
+        margin: 0 auto;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        position: relative;
+        z-index: 10;
+      }
+      #version-display {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+      h1 {
+        margin-top: 0;
+        font-size: 2.5em;
+        background: linear-gradient(
+          to right,
+          #ff9933 0%,
+          #ff9933 33%,
+          #ffffff 33%,
+          #ffffff 66%,
+          #138808 66%,
+          #138808 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      }
+      #counter {
+        font-size: 24px;
+        margin: 10px 0;
+        background-color: #2c3e50;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+      }
+      #pps-display {
+        font-size: 16px;
+        color: #bdc3c7;
+        margin-bottom: 15px;
+      }
+      #juunat-container {
+        position: relative;
+        display: inline-block;
+        margin: 10px 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #juunat-img {
+        width: 200px;
+        height: 200px;
+        cursor: pointer;
+        transition: all 0.1s;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+        position: relative;
+        z-index: 1;
+        -webkit-user-drag: none;
+        user-select: none;
+      }
+      #juunat-img:active {
+        transform: scale(0.95);
+      }
+      .click-effect {
+        position: absolute;
+        color: #f1c40f;
+        font-size: 24px;
+        font-weight: bold;
+        pointer-events: none;
+        animation: float-up 1s forwards;
+        z-index: 30;
+      }
+      .confetti-piece {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        background-image: url("https://file.garden/ZXP--j_dI1vYUjvY/juunat.PNG");
+        background-size: cover;
+        opacity: 0.8;
+        pointer-events: none;
+        z-index: 20;
+        animation: confetti-burst linear forwards;
+        transform-origin: center;
+        -webkit-user-drag: none;
+      }
+      #shop-button,
+      #settings-button {
+        position: fixed;
+        width: 60px;
+        height: 60px;
+        background: #f1c40f;
+        color: #2c3e50;
+        border: none;
+        border-radius: 50%;
+        font-size: 28px;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+        z-index: 99;
+      }
+      #shop-button {
+        bottom: 30px;
+        right: 30px;
+      }
+      #settings-button {
+        top: 20px;
+        right: 20px;
+        background: #95a5a6;
+      }
+      #shop-button:hover,
+      #settings-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+      }
+
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 100;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      .modal-overlay.visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .modal-content {
+        background: linear-gradient(145deg, #3a506b, #2c3e50);
+        padding: 25px;
+        border-radius: 15px;
+        border: 1px solid #4a6280;
+        width: 90%;
+        max-width: 450px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        transform: scale(0.95);
+        transition: transform 0.3s ease;
+        max-height: 85vh;
+        overflow-y: auto;
+      }
+      .modal-overlay.visible .modal-content {
+        transform: scale(1);
+      }
+      .modal-content h2 {
+        margin-top: 0;
+        border-bottom: 2px solid #f1c40f;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+      }
+      .shop-section h3,
+      .modal-content h3 {
+        color: #1abc9c;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        text-align: left;
+      }
+      #confirmation-dialog .modal-content {
+        max-width: 350px;
+      }
+      #confirmation-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      #confirmation-buttons button {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      #confirm-reset-yes {
+        background-color: #e74c3c;
+        color: white;
+      }
+      #confirm-reset-no {
+        background-color: #95a5a6;
+        color: white;
+      }
+
+      .settings-section,
+      .debug-section {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 15px;
+        align-items: center;
+      }
+      .settings-section button,
+      .debug-section button {
+        flex: 1;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      .settings-section button:hover,
+      .debug-section button:hover {
+        background-color: #2980b9;
+      }
+      .debug-input {
+        padding: 8px;
+        border-radius: 5px;
+        border: 1px solid #7f8c8d;
+        background: #2c3e50;
+        color: #ecf0f1;
+        font-size: 16px;
+        flex-grow: 1;
+      }
+      #debug-chair-select {
+        min-width: 150px;
+      }
+      .debug-section button {
+        background-color: #27ae60;
+      }
+      .debug-section button:hover {
+        background-color: #2ecc71;
+      }
+      #debug-trigger-kannada {
+        background-color: #8e44ad;
+        width: 100%;
+      }
+      #debug-trigger-kannada:hover {
+        background-color: #9b59b6;
+      }
+
+      .danger-zone {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #4a6280;
+      }
+      .danger-zone button {
+        width: 100%;
+        background-color: #c0392b;
+      }
+      .danger-zone button:hover {
+        background-color: #e74c3c;
+      }
+
+      .close-button {
+        background-color: #7f8c8d;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        margin-top: 20px;
+        cursor: pointer;
+        width: 100%;
+        font-size: 16px;
+        font-weight: bold;
+        transition: background-color 0.2s;
+      }
+      .close-button:hover {
+        background-color: #95a5a6;
+      }
+      .upgrade-item {
+        background-color: #2c3e50;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 10px;
+        display: grid;
+        grid-template-columns: 60px 1fr auto;
+        gap: 15px;
+        align-items: center;
+        border: 1px solid #445a72;
+        transition: all 0.2s ease;
+      }
+      .upgrade-item.hidden {
+        display: none;
+      }
+      .upgrade-item:hover {
+        border-color: #f1c40f;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      }
+      .upgrade-icon {
+        font-size: 40px;
+        background: #34495e;
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        overflow: hidden;
+        cursor: help;
+      }
+      .upgrade-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .upgrade-name {
+        font-weight: bold;
+        font-size: 18px;
+        margin-bottom: 4px;
+      }
+      .upgrade-details {
+        font-size: 14px;
+        color: #bdc3c7;
+      }
+      .upgrade-details span {
+        color: #ecf0f1;
+        font-weight: bold;
+      }
+      .upgrade-cost {
+        color: #f1c40f;
+        font-weight: bold;
+      }
+      .upgrade-button {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        min-width: 80px;
+        font-size: 14px;
+        transition: background-color 0.2s;
+      }
+      .upgrade-button.cooldown {
+        background-color: #2980b9;
+      }
+      .upgrade-button:hover:not(:disabled) {
+        background-color: #2980b9;
+      }
+      .upgrade-button:disabled {
+        background-color: #7f8c8d;
+        cursor: not-allowed;
+      }
+      #countdown-timer {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(241, 196, 15, 0.85);
+        color: #2c3e50;
+        font-size: 2.5em;
+        font-weight: bold;
+        padding: 10px 30px;
+        border-radius: 10px;
+        z-index: 101;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      #countdown-timer.visible {
+        opacity: 1;
+      }
+
+      @keyframes float-up {
+        to {
+          opacity: 0;
+          transform: translateY(-50px);
+        }
+      }
+      @keyframes confetti-burst {
+        to {
+          transform: translate(var(--tx), var(--ty)) rotate(var(--rot))
+            scale(0.5);
+          opacity: 0;
+        }
+      }
+      @keyframes fall {
+        to {
+          transform: translateY(110vh) rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="rain-container"></div>
+    <div id="game-container">
+      <div id="version-display">Version 2.3</div>
+      <h1>Juunat Clicker</h1>
+      <div id="counter">Juunat Points: <span id="points">0</span></div>
+      <div id="pps-display">Points Per Second: <span id="pps">0</span></div>
+      <div id="juunat-container">
+        <img
+          id="juunat-img"
+          src="https://file.garden/ZXP--j_dI1vYUjvY/juunat.PNG"
+          alt="Click for Juunat Points"
+        />
+      </div>
+    </div>
+
+    <button id="shop-button">🛍️</button>
+    <button id="settings-button">⚙️</button>
+    <div id="countdown-timer"></div>
+    <audio
+      id="kannada-audio"
+      src="https://file.garden/ZXP--j_dI1vYUjvY/JUUNAT.mp3"
+      preload="auto"
+    ></audio>
+
+    <div id="shop" class="modal-overlay">
+      <div class="modal-content">
+        <h2>Shop</h2>
+        <div class="shop-section">
+          <h3>Upgrades</h3>
+          <div class="upgrade-item">
+            <div class="upgrade-icon">
+              <img
+                src="https://file.garden/ZXP--j_dI1vYUjvY/kannadamode.png"
+                alt="Kannada Mode Icon"
+              />
+            </div>
+            <div>
+              <div class="upgrade-name">KANNADA MODE</div>
+              <div class="upgrade-details">
+                Cost: <span class="upgrade-cost" id="kannada-cost">150</span> |
+                3x clicks for 30s!
+              </div>
+            </div>
+            <button id="buy-kannada" class="upgrade-button">Buy</button>
+          </div>
+        </div>
+        <div class="shop-section">
+          <h3>Multipliers</h3>
+          <div class="upgrade-item">
+            <div id="scarf-icon" class="upgrade-icon">🧣</div>
+            <div>
+              <div class="upgrade-name">+1 Scarf</div>
+              <div class="upgrade-details">
+                Cost: <span class="upgrade-cost" id="scarf-cost">20</span> |
+                Owned: <span id="scarf-owned">0</span>
+              </div>
+            </div>
+            <button id="buy-scarf" class="upgrade-button">Buy</button>
+          </div>
+        </div>
+        <div class="shop-section" id="automation-section">
+          <h3>Automation</h3>
+        </div>
+        <button id="close-shop-button" class="close-button">Close</button>
+      </div>
+    </div>
+    <div id="settings-menu" class="modal-overlay">
+      <div class="modal-content">
+        <h2>Settings</h2>
+        <div class="settings-section">
+          <button id="save-game-button">Save</button>
+          <button id="load-game-button">Load</button>
+        </div>
+        <div class="danger-zone">
+          <button id="reset-game-button">Reset</button>
+        </div>
+        <button id="close-settings-button" class="close-button">Close</button>
+      </div>
+    </div>
+    <div id="debug-menu" class="modal-overlay">
+      <div class="modal-content">
+        <h2>Debug</h2>
+        <h3>Info</h3>
+        <div id="debug-info-display">
+          <div>Total Clicks: <span id="debug-total-clicks">0</span></div>
+          <div>Scarves Bought: <span id="debug-scarves-bought">0</span></div>
+        </div>
+        <h3>Cheats</h3>
+        <div class="debug-section">
+          <button id="debug-add-100">+100</button
+          ><button id="debug-add-1k">+1k</button>
+          <button id="debug-add-10k">+10k</button
+          ><button id="debug-add-100k">+100k</button>
+        </div>
+        <div class="debug-section">
+          <input
+            type="number"
+            id="debug-set-scarves-input"
+            class="debug-input"
+            placeholder="Set Scarves"
+          />
+          <button id="debug-set-scarves-button">Set</button>
+        </div>
+        <div class="debug-section">
+          <select id="debug-chair-select" class="debug-input"></select>
+          <button id="debug-max-chair-button">Max Out</button>
+        </div>
+        <div class="debug-section">
+          <button id="debug-trigger-kannada">Trigger KANNADA MODE</button>
+        </div>
+        <button id="close-debug-button" class="close-button">Close</button>
+      </div>
+    </div>
+    <div id="confirmation-dialog" class="modal-overlay">
+      <div class="modal-content">
+        <p>Are you sure? This will erase all progress.</p>
+        <div id="confirmation-buttons">
+          <button id="confirm-reset-yes">Yes, Reset</button>
+          <button id="confirm-reset-no">No, Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- GAME STATE ---
+      let points = 0,
+        clickMultiplier = 1,
+        scarvesOwned = 0,
+        kannadaPurchases = 0,
+        kannadaCooldownEndTime = 0,
+        scarfEmojiClicks = 0,
+        totalClicks = 0,
+        debugClickValue = 1,
+        isDebugClickActive = false,
+        pointsPerSecond = 0;
+
+      let kannadaModeActive = false,
+        kannadaOnCooldown = false;
+
+      const scarfBaseCost = 20,
+        kannadaBaseCost = 150,
+        kannadaBoost = 3,
+        kannadaDuration = 30,
+        kannadaCooldownDuration = 180;
+
+      let automationItems = [
+        {
+          id: "chair",
+          name: "Chair",
+          icon: "🪑",
+          baseCost: 35,
+          pps: 1,
+          maxLevel: 50,
+          owned: 0,
+          costMultiplier: 1.07,
+        },
+        {
+          id: "bronzeChair",
+          name: "Bronze Chair",
+          icon: "🏆",
+          baseCost: 2500,
+          pps: 5,
+          maxLevel: 40,
+          owned: 0,
+          costMultiplier: 1.09,
+        },
+        {
+          id: "goldChair",
+          name: "Gold Chair",
+          icon: "🥇",
+          baseCost: 50000,
+          pps: 25,
+          maxLevel: 30,
+          owned: 0,
+          costMultiplier: 1.11,
+        },
+        {
+          id: "diamondChair",
+          name: "Diamond Chair",
+          icon: "💎",
+          baseCost: 1200000,
+          pps: 125,
+          maxLevel: 20,
+          owned: 0,
+          costMultiplier: 1.14,
+        },
+        {
+          id: "platinumChair",
+          name: "Platinum Chair",
+          icon: "✨",
+          baseCost: 18000000,
+          pps: 625,
+          maxLevel: 10,
+          owned: 0,
+          costMultiplier: 1.18,
+        },
+      ];
+
+      let countdownInterval, rainInterval, kannadaCooldownInterval, ppsInterval;
+
+      // --- DOM ELEMENTS (Cached for performance) ---
+      const D = document;
+      const elements = {
+        pointsDisplay: D.getElementById("points"),
+        ppsDisplay: D.getElementById("pps"),
+        juunatImg: D.getElementById("juunat-img"),
+        juunatContainer: D.getElementById("juunat-container"),
+        shopButton: D.getElementById("shop-button"),
+        shop: D.getElementById("shop"),
+        closeShopButton: D.getElementById("close-shop-button"),
+        buyScarfButton: D.getElementById("buy-scarf"),
+        scarfCostDisplay: D.getElementById("scarf-cost"),
+        scarfOwnedDisplay: D.getElementById("scarf-owned"),
+        buyKannadaButton: D.getElementById("buy-kannada"),
+        kannadaCostDisplay: D.getElementById("kannada-cost"),
+        countdownTimer: D.getElementById("countdown-timer"),
+        kannadaAudio: D.getElementById("kannada-audio"),
+        rainContainer: D.getElementById("rain-container"),
+        settingsButton: D.getElementById("settings-button"),
+        settingsMenu: D.getElementById("settings-menu"),
+        closeSettingsButton: D.getElementById("close-settings-button"),
+        resetGameButton: D.getElementById("reset-game-button"),
+        confirmationDialog: D.getElementById("confirmation-dialog"),
+        confirmResetYes: D.getElementById("confirm-reset-yes"),
+        confirmResetNo: D.getElementById("confirm-reset-no"),
+        saveGameButton: D.getElementById("save-game-button"),
+        loadGameButton: D.getElementById("load-game-button"),
+        automationSection: D.getElementById("automation-section"),
+        scarfIcon: D.getElementById("scarf-icon"),
+        debugMenu: D.getElementById("debug-menu"),
+        closeDebugButton: D.getElementById("close-debug-button"),
+        debugTotalClicks: D.getElementById("debug-total-clicks"),
+        debugScarvesBought: D.getElementById("debug-scarves-bought"),
+        debugSetScarvesInput: D.getElementById("debug-set-scarves-input"),
+        debugSetScarvesButton: D.getElementById("debug-set-scarves-button"),
+        debugChairSelect: D.getElementById("debug-chair-select"),
+        debugMaxChairButton: D.getElementById("debug-max-chair-button"),
+        debugTriggerKannada: D.getElementById("debug-trigger-kannada"),
+      };
+
+      // --- UTILITY FUNCTIONS ---
+      function throttle(func, limit) {
+        let inThrottle;
+        return function () {
+          if (!inThrottle) {
+            func.apply(this, arguments);
+            inThrottle = true;
+            setTimeout(() => (inThrottle = false), limit);
+          }
+        };
+      }
+
+      // --- SAVE/LOAD SYSTEM ---
+      function getGameState() {
+        return {
+          points,
+          clickMultiplier,
+          scarvesOwned,
+          kannadaPurchases,
+          kannadaCooldownEndTime,
+          totalClicks,
+          debugClickValue,
+          isDebugClickActive,
+          automationItemsData: automationItems.map((item) => ({
+            id: item.id,
+            owned: item.owned,
+          })),
+          version: "2.3",
+        };
+      }
+      function applyGameState(state) {
+        points = state.points || 0;
+        clickMultiplier = state.clickMultiplier || 1;
+        scarvesOwned = state.scarvesOwned || 0;
+        kannadaPurchases = state.kannadaPurchases || 0;
+        kannadaCooldownEndTime = state.kannadaCooldownEndTime || 0;
+        totalClicks = state.totalClicks || 0;
+
+        if (state.automationItemsData) {
+          state.automationItemsData.forEach((savedItem) => {
+            const gameItem = automationItems.find(
+              (item) => item.id === savedItem.id
+            );
+            if (gameItem) gameItem.owned = savedItem.owned;
+          });
+        }
+
+        const now = Date.now();
+        if (kannadaCooldownEndTime > now) {
+          startKannadaCooldown(
+            Math.ceil((kannadaCooldownEndTime - now) / 1000)
+          );
+        }
+        recalculatePPS();
+        updateDisplays();
+      }
+      function saveToLocalStorage() {
+        localStorage.setItem(
+          "juunatClickerSave",
+          JSON.stringify(getGameState())
+        );
+      }
+      const throttledSave = throttle(saveToLocalStorage, 1000);
+
+      function loadFromLocalStorage() {
+        const savedState = localStorage.getItem("juunatClickerSave");
+        if (savedState) applyGameState(JSON.parse(savedState));
+      }
+      function saveToFile() {
+        const gameStateString = JSON.stringify(getGameState());
+        const encodedData = btoa(gameStateString);
+        const blob = new Blob([encodedData], {
+          type: "text/plain;charset=utf-8",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = D.createElement("a");
+        link.href = url;
+        link.download = "juunat_save.juunat";
+        D.body.appendChild(link);
+        link.click();
+        D.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+      function loadFromFile() {
+        const input = D.createElement("input");
+        input.type = "file";
+        input.accept = ".juunat";
+        input.onchange = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            try {
+              const decodedData = atob(event.target.result);
+              const loadedState = JSON.parse(decodedData);
+              if (typeof loadedState.points !== "number")
+                throw new Error("Invalid save data.");
+              applyGameState(loadedState);
+              alert("Game loaded successfully!");
+            } catch (err) {
+              alert(
+                "Failed to load save file. It may be invalid or corrupted."
+              );
+            }
+          };
+          reader.readAsText(file);
+        };
+        input.click();
+      }
+      function resetGame() {
+        localStorage.removeItem("juunatClickerSave"), location.reload();
+      }
+
+      // --- CORE FUNCTIONS ---
+      function updateDisplays() {
+        elements.pointsDisplay.textContent = formatNumber(points);
+        elements.ppsDisplay.textContent = formatNumber(pointsPerSecond);
+        elements.scarfOwnedDisplay.textContent = scarvesOwned;
+        elements.scarfCostDisplay.textContent = formatNumber(
+          calculateScarfCost()
+        );
+        elements.buyScarfButton.disabled = points < calculateScarfCost();
+        elements.kannadaCostDisplay.textContent = formatNumber(
+          calculateKannadaCost()
+        );
+        elements.buyKannadaButton.disabled =
+          kannadaModeActive ||
+          kannadaOnCooldown ||
+          points < calculateKannadaCost();
+
+        let previousItemMaxed = true;
+        automationItems.forEach((item) => {
+          const itemElement = D.getElementById(`${item.id}-item`);
+          const cost = calculateItemCost(item);
+          D.getElementById(`${item.id}-cost`).textContent = formatNumber(cost);
+          D.getElementById(`${item.id}-owned`).textContent = item.owned;
+          D.getElementById(`${item.id}-buy`).disabled =
+            points < cost || item.owned >= item.maxLevel;
+          itemElement.classList.toggle("hidden", !previousItemMaxed);
+          previousItemMaxed = item.owned >= item.maxLevel;
+        });
+      }
+
+      function updateDebugMenu() {
+        elements.debugTotalClicks.textContent = totalClicks;
+        elements.debugScarvesBought.textContent = scarvesOwned;
+      }
+
+      // --- CALCULATION & FORMATTING ---
+      const calculateScarfCost = () => scarfBaseCost * (scarvesOwned + 1);
+      const calculateKannadaCost = () =>
+        Math.ceil(kannadaBaseCost * Math.pow(1.5, kannadaPurchases));
+      const calculateItemCost = (item) =>
+        Math.ceil(item.baseCost * Math.pow(item.costMultiplier, item.owned));
+
+      function recalculatePPS() {
+        pointsPerSecond = automationItems.reduce(
+          (total, item) => total + item.owned * item.pps,
+          0
+        );
+      }
+
+      function formatNumber(num) {
+        return Math.floor(num).toLocaleString("en-US");
+      }
+      const formatTime = (seconds) =>
+        `${Math.floor(seconds / 60)}:${(seconds % 60)
+          .toString()
+          .padStart(2, "0")}`;
+
+      // --- GAME LOOPS & ACTIONS ---
+      function earnPassiveIncome() {
+        points += pointsPerSecond;
+        throttledSave();
+        updateDisplays();
+      }
+      function activateKannadaMode() {
+        elements.kannadaAudio.currentTime = 0;
+        elements.kannadaAudio.play();
+        rainInterval = setInterval(createRaindrop, 200);
+        elements.countdownTimer.classList.add("visible");
+        let timeLeft = kannadaDuration;
+        elements.countdownTimer.textContent = timeLeft;
+        countdownInterval = setInterval(() => {
+          timeLeft--;
+          elements.countdownTimer.textContent = timeLeft;
+          if (timeLeft <= 0) deactivateKannadaMode();
+        }, 1000);
+      }
+      function deactivateKannadaMode() {
+        elements.kannadaAudio.pause();
+        clearInterval(rainInterval);
+        clearInterval(countdownInterval);
+        elements.rainContainer.innerHTML = "";
+        kannadaModeActive = false;
+        elements.countdownTimer.classList.remove("visible");
+        startKannadaCooldown(kannadaCooldownDuration);
+        updateDisplays();
+      }
+      function startKannadaCooldown(duration) {
+        clearInterval(kannadaCooldownInterval);
+        kannadaOnCooldown = true;
+        elements.buyKannadaButton.disabled = true;
+        elements.buyKannadaButton.classList.add("cooldown");
+        kannadaCooldownEndTime = Date.now() + duration * 1000;
+        let cooldownLeft = duration;
+        const timer = () => {
+          elements.buyKannadaButton.textContent = `CD: ${formatTime(
+            cooldownLeft
+          )}`;
+          cooldownLeft--;
+          if (cooldownLeft < 0) {
+            clearInterval(kannadaCooldownInterval);
+            kannadaOnCooldown = false;
+            kannadaCooldownEndTime = 0;
+            elements.buyKannadaButton.textContent = "Buy";
+            elements.buyKannadaButton.classList.remove("cooldown");
+            updateDisplays();
+          }
+        };
+        timer();
+        kannadaCooldownInterval = setInterval(timer, 1000);
+      }
+      function createRaindrop() {
+        const drop = D.createElement("div");
+        drop.className = "raindrop";
+        const fallDuration = 4 + Math.random() * 6;
+        drop.style.left = Math.random() * 100 + "vw";
+        drop.style.animationDuration = fallDuration + "s";
+        elements.rainContainer.appendChild(drop);
+        setTimeout(() => {
+          drop.remove();
+        }, fallDuration * 1000);
+      }
+      let lastClickTime = 0;
+      const clickDelay = 50;
+      function handleClick(e) {
+        totalClicks++;
+        const now = Date.now();
+        if (now - lastClickTime < clickDelay) return;
+        lastClickTime = now;
+        const clickValue =
+          (isDebugClickActive ? debugClickValue : clickMultiplier) *
+          (kannadaModeActive ? kannadaBoost : 1);
+        points += clickValue;
+        const rect = elements.juunatContainer.getBoundingClientRect();
+        const x = e ? e.clientX - rect.left : rect.width / 2;
+        const y = e ? e.clientY - rect.top : rect.height / 2;
+        createClickEffect(x, y, clickValue);
+        if (clickMultiplier <= 3 || Math.random() > 0.7) createConfetti(x, y);
+        elements.juunatImg.style.transform = "scale(0.95)";
+        setTimeout(() => {
+          elements.juunatImg.style.transform = "scale(1)";
+        }, 100);
+        updateDisplays();
+        throttledSave();
+      }
+      function createClickEffect(x, y, value) {
+        const effect = D.createElement("div");
+        effect.className = "click-effect";
+        effect.textContent = `+${formatNumber(value)}`;
+        effect.style.left = `${x - 15}px`;
+        effect.style.top = `${y - 15}px`;
+        elements.juunatContainer.appendChild(effect);
+        setTimeout(() => effect.remove(), 1000);
+      }
+      function createConfetti(x, y) {
+        const pieceCount = Math.min(15, 5 + scarvesOwned);
+        for (let i = 0; i < pieceCount; i++) {
+          const confetti = D.createElement("div");
+          confetti.className = "confetti-piece";
+          const angle = Math.random() * 2 * Math.PI,
+            distance = 50 + Math.random() * 100,
+            tx = Math.cos(angle) * distance,
+            ty = Math.sin(angle) * distance,
+            rot = (Math.random() - 0.5) * 360,
+            duration = 500 + Math.random() * 500;
+          confetti.style.left = `${x}px`;
+          confetti.style.top = `${y}px`;
+          confetti.style.setProperty("--tx", `${tx}px`);
+          confetti.style.setProperty("--ty", `${ty}px`);
+          confetti.style.setProperty("--rot", `${rot}deg`);
+          confetti.style.animationDuration = `${duration}ms`;
+          elements.juunatContainer.appendChild(confetti);
+          setTimeout(() => confetti.remove(), duration);
+        }
+      }
+
+      // --- DYNAMIC ELEMENT CREATION ---
+      function initializeShop() {
+        automationItems.forEach((item) => {
+          const itemHTML = `
+                <div id="${item.id}-item" class="upgrade-item hidden">
+                    <div class="upgrade-icon">${item.icon}</div>
+                    <div>
+                        <div class="upgrade-name">${item.name}</div>
+                        <div class="upgrade-details">
+                            Cost: <span class="upgrade-cost" id="${item.id}-cost">0</span> |
+                            Owned: <span id="${item.id}-owned">0</span>/${item.maxLevel} | +${item.pps} pps
+                        </div>
+                    </div>
+                    <button id="${item.id}-buy" class="upgrade-button">Buy</button>
+                </div>`;
+          elements.automationSection.innerHTML += itemHTML;
+        });
+        automationItems.forEach((item) => {
+          D.getElementById(`${item.id}-buy`).addEventListener("click", () =>
+            buyAutomationItem(item.id)
+          );
+        });
+      }
+      function buyAutomationItem(itemId) {
+        const item = automationItems.find((i) => i.id === itemId);
+        if (!item) return;
+        const cost = calculateItemCost(item);
+        if (points >= cost && item.owned < item.maxLevel) {
+          points -= cost;
+          item.owned++;
+          recalculatePPS();
+          updateDisplays();
+          throttledSave();
+        }
+      }
+
+      // NEW: Populate debug menu dropdown
+      function populateDebugMenu() {
+        automationItems.forEach((item) => {
+          const option = D.createElement("option");
+          option.value = item.id;
+          option.textContent = item.name;
+          elements.debugChairSelect.appendChild(option);
+        });
+      }
+
+      // --- EVENT LISTENERS ---
+      function addEventListeners() {
+        elements.shopButton.addEventListener("click", () =>
+          elements.shop.classList.add("visible")
+        );
+        elements.closeShopButton.addEventListener("click", () =>
+          elements.shop.classList.remove("visible")
+        );
+        elements.settingsButton.addEventListener("click", () =>
+          elements.settingsMenu.classList.add("visible")
+        );
+        elements.closeSettingsButton.addEventListener("click", () =>
+          elements.settingsMenu.classList.remove("visible")
+        );
+        elements.resetGameButton.addEventListener("click", () => {
+          elements.settingsMenu.classList.remove("visible");
+          elements.confirmationDialog.classList.add("visible");
+        });
+        elements.confirmResetNo.addEventListener("click", () =>
+          elements.confirmationDialog.classList.remove("visible")
+        );
+        elements.confirmResetYes.addEventListener("click", resetGame);
+        elements.saveGameButton.addEventListener("click", saveToFile);
+        elements.loadGameButton.addEventListener("click", loadFromFile);
+        elements.juunatImg.addEventListener("mousedown", handleClick);
+        elements.juunatImg.addEventListener("touchstart", (e) => {
+          e.preventDefault(), handleClick(e.touches[0]);
+        });
+        elements.buyScarfButton.addEventListener("click", () => {
+          const cost = calculateScarfCost();
+          if (points >= cost) {
+            points -= cost;
+            scarvesOwned++;
+            clickMultiplier = 1 + scarvesOwned;
+            updateDisplays();
+            throttledSave();
+          }
+        });
+        elements.buyKannadaButton.addEventListener("click", () => {
+          const cost = calculateKannadaCost();
+          if (points >= cost && !kannadaModeActive && !kannadaOnCooldown) {
+            points -= cost;
+            kannadaPurchases++;
+            kannadaModeActive = true;
+            activateKannadaMode();
+            updateDisplays();
+            throttledSave();
+          }
+        });
+        elements.scarfIcon.addEventListener("click", () => {
+          scarfEmojiClicks++;
+          if (scarfEmojiClicks >= 5) {
+            updateDebugMenu();
+            elements.debugMenu.classList.add("visible");
+            scarfEmojiClicks = 0;
+          }
+        });
+        elements.closeDebugButton.addEventListener("click", () =>
+          elements.debugMenu.classList.remove("visible")
+        );
+        D.getElementById("debug-add-100").addEventListener("click", () => {
+          points += 100;
+          updateDisplays();
+        });
+        D.getElementById("debug-add-1k").addEventListener("click", () => {
+          points += 1000;
+          updateDisplays();
+        });
+        D.getElementById("debug-add-10k").addEventListener("click", () => {
+          points += 10000;
+          updateDisplays();
+        });
+        D.getElementById("debug-add-100k").addEventListener("click", () => {
+          points += 100000;
+          updateDisplays();
+        });
+        elements.debugTriggerKannada.addEventListener("click", () => {
+          if (kannadaModeActive) return;
+          clearInterval(kannadaCooldownInterval);
+          kannadaOnCooldown = false;
+          kannadaCooldownEndTime = 0;
+          elements.buyKannadaButton.textContent = "Buy";
+          elements.buyKannadaButton.classList.remove("cooldown");
+          kannadaModeActive = true;
+          activateKannadaMode();
+          updateDisplays();
+          elements.debugMenu.classList.remove("visible");
+        });
+        elements.debugSetScarvesButton.addEventListener("click", () => {
+          const val = parseInt(elements.debugSetScarvesInput.value);
+          if (!isNaN(val) && val >= 0) {
+            scarvesOwned = val;
+            clickMultiplier = 1 + scarvesOwned;
+            updateDisplays();
+            alert(`Scarves set to ${val}.`);
+          } else {
+            alert("Invalid input for scarves.");
+          }
+        });
+        elements.debugMaxChairButton.addEventListener("click", () => {
+          const selectedId = elements.debugChairSelect.value;
+          const item = automationItems.find((i) => i.id === selectedId);
+          if (item) {
+            item.owned = item.maxLevel;
+            recalculatePPS();
+            updateDisplays();
+            alert(`Maxed out ${item.name}!`);
+          }
+        });
+      }
+
+      // --- INITIALIZE GAME ---
+      function initializeGame() {
+        initializeShop();
+        populateDebugMenu();
+        addEventListeners();
+        loadFromLocalStorage();
+        updateDisplays();
+        ppsInterval = setInterval(earnPassiveIncome, 1000);
+      }
+
+      initializeGame();
+    </script>
+  </body>
+</html>
